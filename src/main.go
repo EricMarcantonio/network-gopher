@@ -1,110 +1,46 @@
 package main
 
 import (
-	"github.com/tatsushid/go-fastping"
-	"log"
-	"net"
+	"fmt"
 	"strconv"
+	"sync/atomic"
 	"time"
 )
-
-/*
-Represents a host on the network.
-*/
-type Host struct {
-	/*
-		The IP of the host
-	*/
-	addr *net.IPAddr
-	/*
-		The time it takes to get from host to target and back.
-	*/
-	rtt time.Duration
-	/*
-		Whether or not the address is up.
-		Note for the security folks: I am lying to you...
-	*/
-	resolved bool
-}
-
-type Port struct {
-	addr   *net.IPAddr
-	num    int
-	isOpen bool
-}
 
 var hosts = make(chan Host)
 var ports = make(chan Port)
 
+var stayAlive int32
+
 func main() {
+	start := time.Now()
 	final := make(map[string][]int)
 	for i := 0; i < 256; i++ {
-		go pingHost("10.0.0." + strconv.Itoa(i))
+		atomic.AddInt32(&stayAlive, 1)
+		go TestHost("10.0.0." + strconv.Itoa(i))
 	}
-	for {
+
+	for atomic.LoadInt32(&stayAlive) > 0 {
 		select {
 		case msg := <-hosts:
+			atomic.AddInt32(&stayAlive, -1)
 			if msg.resolved {
-				scanAllPorts(msg.addr)
+				atomic.AddInt32(&stayAlive, 1)
+				//log.Printf("Found a host up at %s", msg.addr.String())
+				go ScanAllPorts(msg.addr)
 			}
 		case p := <-ports:
+			atomic.AddInt32(&stayAlive, -1)
 			if p.isOpen {
-				log.Println(net.JoinHostPort(p.addr.String(), strconv.Itoa(p.num)) + "is" + strconv.FormatBool(p.isOpen))
+				//log.Println(net.JoinHostPort(p.addr.String(), strconv.Itoa(p.num)) + "is" + strconv.FormatBool(p.isOpen))
 				final[p.addr.String()] = append(final[p.addr.String()], p.num)
 			}
 		}
 	}
-}
+	fmt.Println("Address\t\tPorts Up")
+	for s, ints := range final {
+		fmt.Printf("%s\t%d\n", s, ints)
+	}
+	fmt.Printf("Scan finished in %d second(s)\n", time.Now().Second()-start.Second())
 
-func pingHost(addr string) {
-
-	ping := fastping.NewPinger()
-	ip, err := net.ResolveIPAddr("ip4:icmp", addr)
-
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	HOST := Host{
-		addr:     ip,
-		rtt:      0,
-		resolved: false,
-	}
-	ping.AddIPAddr(ip)
-	ping.OnRecv = func(addr *net.IPAddr, duration time.Duration) {
-		HOST.resolved = true
-		HOST.rtt = duration
-		hosts <- HOST
-	}
-	ping.OnIdle = func() {
-		if !HOST.resolved {
-			hosts <- HOST
-		}
-	}
-	err = ping.Run()
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func scanAllPorts(addr *net.IPAddr) {
-	common := []int{21, 22, 25, 53, 80, 110, 123, 143, 43, 465, 631, 993, 995}
-	for _, i := range common {
-		i := i
-		go func() {
-			_, err := net.Dial("tcp", net.JoinHostPort(addr.String(), strconv.Itoa(i)))
-			if err != nil {
-				ports <- Port{
-					addr:   addr,
-					num:    i,
-					isOpen: false,
-				}
-			} else {
-				ports <- Port{
-					addr:   addr,
-					num:    i,
-					isOpen: true,
-				}
-			}
-		}()
-	}
 }

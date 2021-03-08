@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/tatsushid/go-fastping"
 	"log"
 	"net"
@@ -9,30 +8,52 @@ import (
 	"time"
 )
 
+/*
+Represents a host on the network.
+*/
 type Host struct {
-	addr     *net.IPAddr
-	rtt      time.Duration
+	/*
+		The IP of the host
+	*/
+	addr *net.IPAddr
+	/*
+		The time it takes to get from host to target and back.
+	*/
+	rtt time.Duration
+	/*
+		Whether or not the address is up.
+		Note for the security folks: I am lying to you...
+	*/
 	resolved bool
 }
 
-var responses = make(chan Host, 20)
+type Port struct {
+	addr   *net.IPAddr
+	num    int
+	isOpen bool
+}
+
+var hosts = make(chan Host)
+var ports = make(chan Port)
 
 func main() {
-	start := time.Now()
+	final := make(map[string][]int)
 	for i := 0; i < 256; i++ {
 		go pingHost("10.0.0." + strconv.Itoa(i))
 	}
-	i := 0
 	for {
-		msg := <-responses
-		log.Println(strconv.Itoa(i) + ": " + msg.addr.String() + " in " + msg.rtt.String())
-		i++
-		if i == 256 {
-			break
+		select {
+		case msg := <-hosts:
+			if msg.resolved {
+				scanAllPorts(msg.addr)
+			}
+		case p := <-ports:
+			if p.isOpen {
+				log.Println(net.JoinHostPort(p.addr.String(), strconv.Itoa(p.num)) + "is" + strconv.FormatBool(p.isOpen))
+				final[p.addr.String()] = append(final[p.addr.String()], p.num)
+			}
 		}
 	}
-	fmt.Println("Scanned " + strconv.Itoa(i) + " ipaddresses in " + strconv.Itoa(time.Now().Second() - start.Second()) + "s.")
-
 }
 
 func pingHost(addr string) {
@@ -44,23 +65,46 @@ func pingHost(addr string) {
 		log.Fatalln(err.Error())
 	}
 	HOST := Host{
-		addr: ip,
-		rtt: 0,
+		addr:     ip,
+		rtt:      0,
 		resolved: false,
 	}
 	ping.AddIPAddr(ip)
 	ping.OnRecv = func(addr *net.IPAddr, duration time.Duration) {
 		HOST.resolved = true
 		HOST.rtt = duration
-		responses <- HOST
+		hosts <- HOST
 	}
 	ping.OnIdle = func() {
 		if !HOST.resolved {
-			responses <- HOST
+			hosts <- HOST
 		}
 	}
 	err = ping.Run()
 	if err != nil {
 		log.Println(err)
+	}
+}
+
+func scanAllPorts(addr *net.IPAddr) {
+	common := []int{21, 22, 25, 53, 80, 110, 123, 143, 43, 465, 631, 993, 995}
+	for _, i := range common {
+		i := i
+		go func() {
+			_, err := net.Dial("tcp", net.JoinHostPort(addr.String(), strconv.Itoa(i)))
+			if err != nil {
+				ports <- Port{
+					addr:   addr,
+					num:    i,
+					isOpen: false,
+				}
+			} else {
+				ports <- Port{
+					addr:   addr,
+					num:    i,
+					isOpen: true,
+				}
+			}
+		}()
 	}
 }

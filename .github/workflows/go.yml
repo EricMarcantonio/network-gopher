@@ -12,11 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
+    
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.15
 
     - name: Build
-      run: go build -v ./src
+      run: |
+        GOOS=windows go build -o ./bin/win_network_gopher.exe ./src
+        GOOS=linux go build -o ./bin/lin_network_gopher ./src
+        GOOS=darwin go build -o ./bin/mac_network_gopher ./src
+
+    - name: Release
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+            repo_token: "${{ secrets.GITHUB_TOKEN }}"
+            automatic_release_tag: "latest"
+            prerelease: true
+            title: "Development Build"
+            files: |
+              *_network_*

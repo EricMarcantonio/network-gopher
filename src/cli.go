@@ -2,16 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/gookit/color"
 	"log"
-	"net"
-	"strconv"
-	"strings"
+	"os"
+	"os/exec"
+	"runtime"
 	"time"
 )
 
 func cli() ([]string, error) {
-	printHeader()
+	printTimedHeader()
+	setTerminalClear()
 	targetPTR := flag.String("t", "", "Target address or network")
 	flag.Parse()
 	targets, err := parseNetwork(*targetPTR)
@@ -22,51 +23,57 @@ func cli() ([]string, error) {
 	}
 }
 
-func printHeader() {
-	fmt.Printf(" _____     _                 _       _____         _           \n")
+func printTimedHeader() {
+	color.Green.Printf(" _____     _                 _       _____         _           \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
+	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
+	color.Green.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n")
+	color.Green.Printf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf("                                              |_|              \n")
+	color.Green.Printf("                                              |_|              \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf("Author: Eric Marcantonio (@EricMarcantonio)\n")
+	color.Red.Printf("Author: Eric Marcantonio (@EricMarcantonio)\n")
 	time.Sleep(time.Millisecond * 200)
 }
 
-func parseNetwork(target string) ([]string, error) {
-	var hostSlice []string
-	_, ipCIDR, err := net.ParseCIDR(target)
-	if err != nil {
-		ipCIDR = &net.IPNet{IP: net.ParseIP(target)}
-		if ipCIDR.IP == nil {
-			log.Fatal("incorrect ip passed")
-		}
-	}
-	var subnets []string
-	if ipCIDR.Mask == nil{
-		subnets = strings.Split(ipCIDR.IP.String(), ".")
-	} else {
-		subnets = strings.Split(ipCIDR.String(), ".")
-	}
+func printHeader() {
+	color.Green.Printf(" _____     _                 _       _____         _           \n")
+	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
+	color.Green.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
+	color.Green.Printf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n")
+	color.Green.Printf("                                              |_|              \n")
+	color.Red.Printf("Author: Eric Marcantonio (@EricMarcantonio)\n")
+}
 
-	isItCIDR := strings.Index(subnets[3], "/")
-	if isItCIDR > 0 {
-		//They gave us a slash - we have a network to look at
-		lastSub := subnets[3][isItCIDR+1:]
-
-		mask, _ := strconv.Atoi(lastSub)
-		if mask == 24 {
-			for i := 0; i < 256; i++ {
-				hostSlice = append(hostSlice, subnets[0]+"."+subnets[1]+"."+subnets[2]+"."+strconv.Itoa(i))
-			}
-		}
-		return hostSlice, nil
+func ClearTermial() {
+	clearFunc, ok := clear[runtime.GOOS]
+	if ok {
+		clearFunc()
 	} else {
-		hostSlice = append(hostSlice, target)
-		return hostSlice, nil
+		log.Panicln("I don't know what platform you built this on...but I cannot see your screen")
+	}
+}
+
+func setTerminalClear() {
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		err := cmd.Run()
+		checkErr(err)
+	}
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		err := cmd.Run()
+		checkErr(err)
+	}
+	clear["darwin"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		err := cmd.Run()
+		checkErr(err)
 	}
 }

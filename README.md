@@ -1,5 +1,5 @@
 # Network-Gopher ⏩ 
-An easy to use Network Scanner
+An easy to use Network Scanner, written in Pure Golang
 
 ### Features
 Concurrent: ✅ 

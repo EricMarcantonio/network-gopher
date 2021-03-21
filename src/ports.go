@@ -41,6 +41,7 @@ var COMMON_PORTS = []int{
 	995, //POP3 (secure)
 }
 
+
 func ScanAllPorts(addr *net.IPAddr) {
 	for _, port := range COMMON_PORTS {
 		atomic.AddInt32(&stayAlive, 1)
@@ -50,27 +51,25 @@ func ScanAllPorts(addr *net.IPAddr) {
 }
 
 func scanPort(addr *net.IPAddr, port int) {
+
+	thisPort := Port{
+		addr: addr,
+		num: port,
+	}
 	con, err := net.DialTimeout("tcp", net.JoinHostPort(addr.String(), strconv.Itoa(port)), 2*time.Second)
 	if err != nil {
-		ports <- Port{
-			addr:   addr,
-			num:    port,
-			isOpen: false, //TODO bug
-		}
+		thisPort.isOpen = false
+		ports <- thisPort
+		atomic.AddInt32(&stayAlive, -1)
 		//log.Printf("Tried %s but got this: %s", net.JoinHostPort(addr.String(), strconv.Itoa(port)), err.Error())
 	} else {
 		if con != nil {
-			ports <- Port{
-				addr:   addr,
-				num:    port,
-				isOpen: true, //TODO bug
-			}
+			thisPort.isOpen = true
+			ports <- thisPort
 		} else {
-			ports <- Port{
-				addr:   addr,
-				num:    port,
-				isOpen: false,
-			}
+			thisPort.isOpen = false
+			ports <- thisPort
 		}
+		atomic.AddInt32(&stayAlive, -1)
 	}
 }

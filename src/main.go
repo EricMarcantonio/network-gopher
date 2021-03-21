@@ -2,45 +2,55 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+	"log"
 	"sync/atomic"
 	"time"
 )
 
+/*
+Represents a host on the network.
+*/
+
 var hosts = make(chan Host)
 var ports = make(chan Port)
-
 var stayAlive int32
+var final map[string][]int
 
 func main() {
+	targets, err := cli()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 	start := time.Now()
-	final := make(map[string][]int)
-	for i := 0; i < 256; i++ {
+	final = make(map[string][]int)
+	for _, target := range targets {
 		atomic.AddInt32(&stayAlive, 1)
-		go TestHost("10.0.0." + strconv.Itoa(i))
+		go TestHost(target)
 	}
 
+
 	for atomic.LoadInt32(&stayAlive) > 0 {
+		//fmt.Println(stayAlive)
 		select {
-		case msg := <-hosts:
-			atomic.AddInt32(&stayAlive, -1)
-			if msg.resolved {
+		case host := <-hosts:
+			if host.resolved {
 				atomic.AddInt32(&stayAlive, 1)
-				//log.Printf("Found a host up at %s", msg.addr.String())
-				go ScanAllPorts(msg.addr)
+				go ScanAllPorts(host.addr)
 			}
 		case p := <-ports:
-			atomic.AddInt32(&stayAlive, -1)
 			if p.isOpen {
-				//log.Println(net.JoinHostPort(p.addr.String(), strconv.Itoa(p.num)) + "is" + strconv.FormatBool(p.isOpen))
 				final[p.addr.String()] = append(final[p.addr.String()], p.num)
 			}
 		}
 	}
-	fmt.Println("Address\t\tPorts Up")
-	for s, ints := range final {
-		fmt.Printf("%s\t%d\n", s, ints)
-	}
 	fmt.Printf("Scan finished in %d second(s)\n", time.Now().Second()-start.Second())
+	PrettyPrintFinal()
+}
 
+func PrettyPrintFinal() {
+	fmt.Printf("IP\t\tPorts\n")
+	for ip, ports := range final {
+		fmt.Printf("%s\t%d\n", ip, ports)
+	}
+	fmt.Printf("Back to hiding!! \n")
 }

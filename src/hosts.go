@@ -4,6 +4,7 @@ import (
 	"github.com/tatsushid/go-fastping"
 	"log"
 	"net"
+	"sync/atomic"
 	"time"
 )
 
@@ -43,19 +44,24 @@ func TestHost(addr string) {
 	host.AddIPAddr(ip)
 	thisHost.addr = ip
 	host.OnRecv = func(addr *net.IPAddr, duration time.Duration) {
+		//Change each host before sending it along to the host
 		thisHost.rtt = duration
 		thisHost.resolved = true
 		hosts <- thisHost
 	}
 
+	// Every host will end up here, just some will fail to resolve. Don't want to fail
 	host.OnIdle = func() {
 		if !thisHost.resolved {
 			hosts <- thisHost
 		}
+		atomic.AddInt32(&stayAlive, -1)
 	}
 
 	err = host.Run()
 	if err != nil {
 		log.Println(err)
+		atomic.AddInt32(&stayAlive, -1)
 	}
+
 }

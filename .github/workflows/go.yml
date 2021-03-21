@@ -32,4 +32,6 @@ jobs:
             prerelease: true
             title: "Development Build"
             files: |
-              *_network_*
+              ./bin/win_network_gopher.exe,
+              ./bin/lin_network_gopher,
+              ./bin/mac_network_gopher

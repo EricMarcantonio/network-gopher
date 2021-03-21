@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gookit/color"
 	"sync/atomic"
 	"time"
 )
@@ -37,12 +37,13 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("Scan finished in %d second(s)\n", time.Now().Second()-start.Second())
+	color.Red.Printf("Scan finished in %d second(s)\n", time.Now().Second()-start.Second())
 }
 
 func PrettyPrintFinal() {
-	fmt.Printf("IP\t\tPorts\n")
+	color.Yellow.Printf("IP\t\tPorts\n")
 	for ip, ports := range final {
-		fmt.Printf("%s\t%d\n", ip, ports)
+		color.White.Printf("%s\t", ip)
+		color.Cyan.Printf("%d\n", ports)
 	}
 }

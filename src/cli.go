@@ -2,8 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"github.com/google/goterm/term"
+	"github.com/gookit/color"
 	"log"
 	"os"
 	"os/exec"
@@ -25,27 +24,27 @@ func cli() ([]string, error) {
 }
 
 func printTimedHeader() {
-	fmt.Printf(term.Greenf(" _____     _                 _       _____         _           \n"))
+	color.Green.Printf(" _____     _                 _       _____         _           \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf(term.Greenf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n"))
+	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf(term.Greenf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n"))
+	color.Green.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf(term.Greenf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n"))
+	color.Green.Printf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf(term.Greenf("                                              |_|              \n"))
+	color.Green.Printf("                                              |_|              \n")
 	time.Sleep(time.Millisecond * 200)
-	fmt.Printf(term.Redf("Author: Eric Marcantonio (@EricMarcantonio)\n"))
+	color.Red.Printf("Author: Eric Marcantonio (@EricMarcantonio)\n")
 	time.Sleep(time.Millisecond * 200)
 }
 
 func printHeader() {
-	fmt.Printf(term.Greenf(" _____     _                 _       _____         _           \n"))
-	fmt.Printf(term.Greenf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n"))
-	fmt.Printf(term.Greenf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n"))
-	fmt.Printf(term.Greenf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n"))
-	fmt.Printf(term.Greenf("                                              |_|              \n"))
-	fmt.Printf(term.Redf("Author: Eric Marcantonio (@EricMarcantonio)\n"))
+	color.Green.Printf(" _____     _                 _       _____         _           \n")
+	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
+	color.Green.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
+	color.Green.Printf("|_|___|___|_| |_____|___|_| |_,_|   |_____|___|  _|_|_|___|_|  \n")
+	color.Green.Printf("                                              |_|              \n")
+	color.Red.Printf("Author: Eric Marcantonio (@EricMarcantonio)\n")
 }
 
 func ClearTermial() {

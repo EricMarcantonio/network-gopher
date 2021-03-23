@@ -11,10 +11,14 @@ import (
 )
 
 func cli() ([]string, error) {
-	printTimedHeader()
-	setTerminalClear()
 	targetPTR := flag.String("t", "", "Target address or network")
 	flag.Parse()
+	if *targetPTR == "" {
+		log.Fatalln("No Argument Passed")
+	}
+	printTimedHeader()
+	setTerminalClear()
+
 	targets, err := parseNetwork(*targetPTR)
 	if err != nil {
 		return nil, err
@@ -76,4 +80,8 @@ func setTerminalClear() {
 		err := cmd.Run()
 		checkErr(err)
 	}
+}
+
+func logFatalf(err string) {
+
 }

@@ -1,8 +1,8 @@
-package main
+package cli
 
 import (
-	"flag"
 	"github.com/gookit/color"
+	"github/EricMarcantonio/network-gopher/errors"
 	"log"
 	"os"
 	"os/exec"
@@ -10,24 +10,8 @@ import (
 	"time"
 )
 
-func cli() ([]string, error) {
-	targetPTR := flag.String("t", "", "Target address or network")
-	flag.Parse()
-	if *targetPTR == "" {
-		log.Fatalln("No Argument Passed")
-	}
-	printTimedHeader()
-	setTerminalClear()
-
-	targets, err := parseNetwork(*targetPTR)
-	if err != nil {
-		return nil, err
-	} else {
-		return targets, nil
-	}
-}
-
-func printTimedHeader() {
+func PrintTimedHeader() {
+	ClearTermial()
 	color.Green.Printf(" _____     _                 _       _____         _           \n")
 	time.Sleep(time.Millisecond * 200)
 	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
@@ -42,7 +26,8 @@ func printTimedHeader() {
 	time.Sleep(time.Millisecond * 200)
 }
 
-func printHeader() {
+func PrintHeader() {
+	ClearTermial()
 	color.Green.Printf(" _____     _                 _       _____         _           \n")
 	color.Green.Printf("|   | |___| |_ _ _ _ ___ ___| |_ ___|   __|___ ___| |_ ___ ___ \n")
 	color.Green.Printf("| | | | -_|  _| | | | . |  _| '_|___|  |  | . | . |   | -_|  _|\n")
@@ -66,22 +51,18 @@ func setTerminalClear() {
 		cmd := exec.Command("clear") //Linux example, its tested
 		cmd.Stdout = os.Stdout
 		err := cmd.Run()
-		checkErr(err)
+		errors.CheckErr(err)
 	}
 	clear["windows"] = func() {
 		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
 		cmd.Stdout = os.Stdout
 		err := cmd.Run()
-		checkErr(err)
+		errors.CheckErr(err)
 	}
 	clear["darwin"] = func() {
 		cmd := exec.Command("clear") //Linux example, its tested
 		cmd.Stdout = os.Stdout
 		err := cmd.Run()
-		checkErr(err)
+		errors.CheckErr(err)
 	}
-}
-
-func logFatalf(err string) {
-
 }

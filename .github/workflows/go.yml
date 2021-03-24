@@ -19,7 +19,10 @@ jobs:
         go-version: 1.15
 
     - name: Build
-      run: make all
+      run: |
+          GOOS=windows go build -o ./bin/win_network_gopher.exe ./main.go
+          GOOS=linux go build -o ./bin/lin_network_gopher ./main.go
+          GOOS=darwin go build -o ./bin/mac_network_gopher ./main.go
 
     - name: Release
       uses: "marvinpinto/action-automatic-releases@latest"

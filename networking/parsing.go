@@ -1,4 +1,4 @@
-package main
+package networking
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func parseNetwork(target string) ([]string, error) {
+func ParseNetwork(target string) ([]string, error) {
 	var hostSlice []string
 	_, ipCIDR, err := net.ParseCIDR(target)
 	if err != nil {

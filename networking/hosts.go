@@ -1,4 +1,4 @@
-package main
+package networking
 
 import (
 	"github.com/tatsushid/go-fastping"
@@ -9,27 +9,7 @@ import (
 )
 
 /*
-Represents a host on the network.
-*/
-
-type Host struct {
-	/*
-		The IP of the host
-	*/
-	addr *net.IPAddr
-	/*
-		The time it takes to get from host to target and back.
-	*/
-	rtt time.Duration
-	/*
-		Whether or not the address is up.
-		Note for the security folks: I am lying to you...
-	*/
-	resolved bool
-}
-
-/*
-	Sends host along chan `hosts`
+	Sends host along chan HOSTS
 */
 func TestHost(addr string) {
 	thisHost := Host{
@@ -47,13 +27,13 @@ func TestHost(addr string) {
 		//Change each host before sending it along to the host
 		thisHost.rtt = duration
 		thisHost.resolved = true
-		hosts <- thisHost
+		HOSTS <- thisHost
 	}
 
 	// Every host will end up here, just some will fail to resolve. Don't want to fail
 	host.OnIdle = func() {
 		if !thisHost.resolved {
-			hosts <- thisHost
+			HOSTS <- thisHost
 		}
 		atomic.AddInt32(&stayAlive, -1)
 	}

@@ -1,4 +1,4 @@
-module go-ping
+module github/EricMarcantonio/network-gopher
 
 require (
 	github.com/gookit/color v1.3.8
